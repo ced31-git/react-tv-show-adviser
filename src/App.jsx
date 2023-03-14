@@ -5,16 +5,36 @@ import { Logo } from "./components/Logo/Logo";
 import logo_img from "./assets/image/logo.png";
 import { BACKDROP_BASE_URL } from "./config";
 import s from "./style.module.css";
-import { TVShowListItem } from "./components/TVShowListItem/TVShowListItem";
+import { TVShowList } from "./components/TVShowList/TVShowList";
+import { SearchBar } from "./components/SearchBar/SearchBar";
 
-TVshowAPI.fetchPopulars();
 export function App() {
   const [currentTVShow, setCurrentTVShow] = useState();
+  const [recommendationList, setRecommendationList] = useState([]);
 
   async function fetchPopulars() {
-    const populars = await TVshowAPI.fetchPopulars();
-    if (populars.length > 0) {
-      setCurrentTVShow(populars[0]);
+    try {
+      const populars = await TVshowAPI.fetchPopulars();
+      if (populars.length > 0) {
+        setCurrentTVShow(populars[0]);
+      }
+    } catch (error) {
+      alert(
+        "Une erreur est survenue lors de la récupération des films populaires"
+      );
+    }
+  }
+
+  async function fetchRecommendations(tvShowId) {
+    try {
+      const recommendation = await TVshowAPI.fetchRecommendations(tvShowId);
+      if (recommendation.length > 0) {
+        setRecommendationList(recommendation.slice(0, 10));
+      }
+    } catch (error) {
+      alert(
+        "Une erreur est survenue lors de la récupération des films recommandés"
+      );
     }
   }
 
@@ -22,8 +42,21 @@ export function App() {
     fetchPopulars();
   }, []);
 
-  function setCurrentTVShowFromRecommendation(tvShow) {
-    alert(JSON.stringify(tvShow));
+  useEffect(() => {
+    if (currentTVShow) {
+      fetchRecommendations(currentTVShow.id);
+    }
+  }, [currentTVShow]);
+
+  async function searchTVShow(tvShowName) {
+    try {
+      const searchResponse = await TVshowAPI.fetchByTitle(tvShowName);
+      if (searchResponse.length > 0) {
+        setCurrentTVShow(searchResponse[0]);
+      }
+    } catch (error) {
+      alert("Une erreur est survenue lors de la recherche du film");
+    }
   }
 
   return (
@@ -45,7 +78,7 @@ export function App() {
             />
           </div>
           <div className="col-sm-12 col-md-4">
-            <input style={{ width: "100%" }} type="text" />
+            <SearchBar onSubmit={searchTVShow} />
           </div>
         </div>
       </div>
@@ -53,10 +86,10 @@ export function App() {
         {currentTVShow && <TVShowDetail tvShow={currentTVShow} />}
       </div>
       <div className={s.recommendations}>
-        {currentTVShow && (
-          <TVShowListItem
-            onClick={setCurrentTVShowFromRecommendation}
-            tvShow={currentTVShow}
+        {recommendationList && recommendationList.length > 0 && (
+          <TVShowList
+            onClickItem={setCurrentTVShow}
+            tvShowList={recommendationList}
           />
         )}
       </div>
