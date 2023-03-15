@@ -73,7 +73,7 @@ export function App() {
           <div className="col-4">
             <Logo
               image={logo_img}
-              title="Watchwise"
+              title="BrainWatch"
               subtitle="Watch better, smarter"
             />
           </div>
